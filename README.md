@@ -15,7 +15,7 @@ How to Run:
 
 Files in Repo:
 - Housing Project.ipynb: main analysis notebook, includes data cleaning. 
-- Metro_zhvi_uc_sfrcondo_tier_0.33_0.67_sm_sa_month.csv: ZHVI dataset
+- Metro_zhvi_uc_sfrcondo_tier_0.33_0.67_sm_sa_month.csv: ZHVI(Zillow Housing Value Index) dataset
 - Metro Homeowner Income Downpayment Data.csv: affordability dataset
 - README.md: project overview and instructions 
 
