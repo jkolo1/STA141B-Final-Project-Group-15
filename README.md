@@ -11,7 +11,7 @@ Both datasets are sourced from Zillow Research (https://www.zillow.com/research/
 How to Run:
 1. Clone the repository
 2. Open Housing Project.ipynb in Jupyter Notebook
-3. Run all Cells in order
+3. Run all cells in order
 
 Files in Repo:
 - Housing Project.ipynb: main analysis notebook, includes data cleaning. 
