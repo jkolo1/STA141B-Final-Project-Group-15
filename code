@@ -1,0 +1,132 @@
+# Attach code (cleaning):
+import pandas as pd
+
+
+files = {"income_downpayment": r"C:\sta141B\Metro Homeowner Income Downpayment Data.csv",
+    "housing_growth": r"C:\sta141B\Metro Housing Data SFR Condo Growth.csv",
+    "zhvi_monthly_growth": r"C:\sta141B\Metro_zhvi_uc_sfrcondo_tier_0.33_0.67_sm_sa_month.csv"}
+
+# read csv data, remove extra spaces, divide columns as identiy columns and date dcolumns
+def clean_csv(path):
+    df = pd.read_csv(path)
+    df.columns = df.columns.str.strip()
+    identity_columns = [c for c in ["RegionID","SizeRank","RegionName","RegionType","StateName","BaseDate"] if c in df.columns]
+    date_columns = [c for c in df.columns if c not in identity_columns]
+
+    # convert to date
+    if "BaseDate" in df.columns:
+        df["BaseDate"] = pd.to_datetime(df["BaseDate"], errors="coerce")
+
+    # convert date columns as numerical
+    for c in date_columns:
+        try:
+            pd.to_datetime(c)
+            df[c] = pd.to_numeric(df[c], errors="coerce")
+        except:
+            pass
+
+    # fill blank name, remove duplicate data, and sorting tables
+    df["StateName"] = df.get("StateName", pd.Series(index=df.index)).fillna("US")
+    df = df.drop_duplicates().sort_values(["SizeRank","RegionName"], na_position="last").reset_index(drop=True)
+    return df
+cleaned = {name: clean_csv(path) for name, path in files.items()}
+
+# three tables after cleanning
+income_downpayment = cleaned["income_downpayment"]
+housing_growth    = cleaned["housing_growth"]
+zhvi_monthly_growth      = cleaned["zhvi_monthly_growth"]
+
+# list first 5 regions and first 15 columns(include region informaion and 10 dates)
+print("income_downpayment: ")
+print(income_downpayment.iloc[:5, :15], "\n\n\n")
+print("housing_growth")
+print(housing_growth.iloc[:5, :15], "\n\n\n")
+print("zhvi_monthly_growth")
+print(zhvi_monthly_growth.iloc[:5, :15])
+
+
+
+
+
+Attach Transformation code:
+# methods: transformation
+
+def transform(df):
+    # convert those date columns, but reamin other types of information like RegionName as original 
+    identity_columns = [c for c in ["RegionID","SizeRank","RegionName","RegionType","StateName","BaseDate"] if c in df.columns]
+    df = df.melt(id_vars=identity_columns, var_name="Date", value_name="Value")
+    df["Date"] = pd.to_datetime(df["Date"], errors="coerce")
+    df["Value"] = pd.to_numeric(df["Value"], errors="coerce")
+    # remove unavailable dates
+    df = df.dropna(subset=["Date"]).sort_values(["RegionName","Date"])
+    # calculate previous hosuing value, current gousing value, and how much they surge up
+    df["PrevValue"] = df.groupby("RegionName")["Value"].shift(1)
+    df["Change"] = df["Value"] - df["PrevValue"]
+    df["PctChange"] = df["Change"] / df["PrevValue"]
+    return df.reset_index(drop=True)
+
+income_downpayment_tr = transform(income_downpayment)
+zhvi_monthly_growth_tr   = transform(zhvi_monthly_growth)
+# tail(1) chooses the latest information
+latest_income_downpayment = income_downpayment_tr.groupby("RegionName", as_index=False).tail(1)
+latest_zhvi_index   = zhvi_monthly_growth_tr.groupby("RegionName", as_index=False).tail(1)
+
+print("latest Income downpayment:")
+print(income_latest)
+print("\n\n\n", "latest Zilow Home Value Index:")
+print(latest_zhvi_index)
+
+
+
+
+
+
+Attach feature engineering code:
+# method: feature engineering
+# group by city, extract year and month, and select the previous month
+def feature_engineering(df):
+    g = df.groupby("RegionName")["Value"]
+    df["Year"] = df["Date"].dt.year
+    df["Month"] = df["Date"].dt.month
+    df["Lag1"] = g.shift(1)
+    df["Lag12"] = g.shift(12)
+    
+    # then calculate how many percentages icnrease or decrease since last month or year
+    df["MoM"] = (df["Value"] - df["Lag1"]) / df["Lag1"]
+    df["YoY"] = (df["Value"] - df["Lag12"]) / df["Lag12"]
+    df["MA3"] = g.transform(lambda x: x.rolling(3).mean())
+    return df
+
+latest_income_downpayment_fea  = feature_engineering(income_downpayment_tr)
+latest_zhvi_monthly_growth_fea = feature_engineering(zhvi_monthly_growth_tr)
+
+print("latest income downpayment feature engineering:")
+print(income_latest)
+print("\n\n\n", "latest zhiv monthly growth feature engineering:")
+print(latest_zhvi_index)
+
+
+
+
+Attach acquisition code:
+# method: acquisition
+
+import pandas as pd
+
+files = {
+    "income_downpayment": r"C:\sta141B\Metro Homeowner Income Downpayment Data.csv",
+    "housing_growth": r"C:\sta141B\Metro Housing Data SFR Condo Growth.csv",
+    "zhvi_monthly_growth": r"C:\sta141B\Metro_zhvi_uc_sfrcondo_tier_0.33_0.67_sm_sa_month.csv"
+}
+
+income_downpayment_acqui = pd.read_csv(files["income_downpayment"])
+housing_growth_acqui = pd.read_csv(files["housing_growth"])
+zhvi_monthly_growth_acqui = pd.read_csv(files["zhvi_monthly_growth"])
+
+print("income downpayment:")
+print(income_downpayment_acqui)
+print("\n\n\n","housing growth:")
+print(housing_growth_acqui)
+print("\n\n\n", "Zillow Housing Value Index monthly growth:")
+print(zhvi_monthly_growth_acqui)
+
