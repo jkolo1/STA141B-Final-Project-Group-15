@@ -20,6 +20,6 @@ Files in Repo:
 - README.md: project overview and instructions 
 
 Contributors:
-Julian Kolodziejczyk, Yuri Takeda, Yongxin Du, Bisma Imran
+Julian Kolodziejczyk, Yuri Takeda, Yongxin Du(William), Bisma Imran
 
 
